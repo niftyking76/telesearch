@@ -132,7 +132,9 @@ document.getElementById("searchInput").addEventListener("input", function () {
 async function fetchResults(append = false) {
     const container = document.getElementById("popularGroupsContainer");
 
-    container.innerHTML = `<p class="text-gray-500">Loading...</p>`;
+    if (!append) {
+        container.innerHTML = `<p class="text-gray-500">Loading...</p>`;
+    }
 
     let url = `${API}?page=${currentPage}&limit=6`;
 
@@ -250,22 +252,19 @@ function selectSuggestion(text) {
     fetchResults();
 }
 
-// 🔘 button search (manual)
-function renderResults(data, append = false) {
-    const container = document.getElementById("popularGroupsContainer");
 
-    if (!append) container.innerHTML = "";
-
-    data.forEach(group => {
-        // same card code
-        container.appendChild(div);
-    });
-}
 
 function loadMore() {
     currentPage++;
     fetchResults(true); // append mode
 }    
+
+function performSearch() {
+    currentQuery = document.getElementById("searchInput").value.trim();
+    currentPage = 1;
+    fetchResults();
+}
+    
 
 // ⌨️ Enter key
 document.getElementById("searchInput").addEventListener("keypress", function(e) {
