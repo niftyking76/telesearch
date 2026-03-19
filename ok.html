@@ -120,6 +120,10 @@ function formatMemberCount(count) {
 document.getElementById("searchInput").addEventListener("input", function () {
     clearTimeout(timer);
     const value = this.value.trim();
+    if (!value) {
+        const box = document.getElementById("suggestionsBox");
+        if (box) box.style.display = "none";
+    }
 
     timer = setTimeout(() => {
         currentQuery = value;
@@ -183,7 +187,9 @@ function renderResults(data, append = false) {
                         <i class="fab fa-telegram text-2xl text-blue-500 dark:text-blue-400"></i>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold">${group.title}</h3>
+                        <h3 class="text-lg font-semibold line-clamp-2 min-h-[48px]">
+                            ${group.title}
+                        </h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                             ${group.type === 'channel' ? 'Channel' : 'Group'}
                         </p>
@@ -262,6 +268,11 @@ function loadMore() {
 function performSearch() {
     currentQuery = document.getElementById("searchInput").value.trim();
     currentPage = 1;
+
+    // ✅ HIDE suggestions
+    const box = document.getElementById("suggestionsBox");
+    if (box) box.style.display = "none";
+
     fetchResults();
 }
     
@@ -278,6 +289,18 @@ document.getElementById('darkModeToggle').addEventListener('click', () => {
 
 // 🚀 INITIAL LOAD (TRENDING)
 fetchResults();
+
+
+document.addEventListener("click", (e) => {
+    const box = document.getElementById("suggestionsBox");
+
+    if (!e.target.closest("#searchInput")) {
+        if (box) box.style.display = "none";
+    }
+});    
+
+
+    
 </script>
 
     
