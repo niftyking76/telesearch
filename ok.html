@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeleSearch - Find Telegram Groups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-hover {
+            transition: all 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .dark .card-hover:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .join-btn {
+            background: linear-gradient(135deg, #0088cc, #00a2e8);
+            transition: all 0.2s ease;
+        }
+        .join-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.3);
+        }
+        .dark .join-btn:hover {
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.5);
+        }
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.2);
+        }
+        .dark .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.4);
+        }
+        .mobile-menu {
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .mobile-menu.open {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+
+<!-- NAVBAR SAME -->
+<nav class="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="index.html" class="flex items-center">
+                    <i class="fab fa-telegram text-2xl text-blue-500 mr-2"></i>
+                    <span class="text-xl font-bold">TeleSearch</span>
+                </a>
+            </div>
+            <div class="flex items-center">
+                <button id="darkModeToggle" class="p-2 rounded-full">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO SAME -->
+<div class="max-w-7xl mx-auto px-4 py-16 text-center">
+    <h1 class="text-4xl font-bold mb-6">Discover the Best Telegram Groups</h1>
+
+    <div class="max-w-2xl mx-auto relative">
+        <input id="searchInput" type="text" placeholder="Search..."
+            class="w-full px-6 py-4 rounded-full border dark:bg-gray-800 search-input">
+        <button onclick="performSearch()" class="absolute right-2 top-2 bg-blue-500 text-white p-2 rounded-full">
+            🔍
+        </button>
+    </div>
+</div>
+
+<!-- ✅ TRENDING SECTION -->
+<div class="max-w-7xl mx-auto px-4 pb-16">
+    <h2 class="text-2xl font-bold mb-6">Trending Groups</h2>
+    <div id="popularGroupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+
+<script>
+const API_URL = "https://teleapi.huntereye76.workers.dev/";
+const API_KEY = "myteleapikey7122";
+
+// format members
+function formatMemberCount(count) {
+    if (!count) return "0";
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count;
+}
+
+// fetch trending
+async function renderPopularGroups() {
+    const container = document.getElementById('popularGroupsContainer');
+    container.innerHTML = "Loading...";
+
+    try {
+        const res = await fetch(`${API_URL}?page=1&limit=6`, {
+            headers: { "x-api-key": API_KEY }
+        });
+
+        const data = await res.json();
+        container.innerHTML = "";
+
+        data.results.forEach(group => {
+            const div = document.createElement("div");
+            div.className = "bg-white dark:bg-gray-800 rounded-lg p-6 shadow card-hover";
+
+            div.innerHTML = `
+                <h3 class="text-lg font-semibold">${group.title}</h3>
+                <p class="text-sm text-gray-500">${group.type}</p>
+                <p class="mt-2 text-sm">${group.description}</p>
+
+                <div class="mt-4 flex justify-between">
+                    <span>${formatMemberCount(group.members)} members</span>
+                    <a href="${group.link}" target="_blank" class="join-btn text-white px-3 py-1 rounded">Join</a>
+                </div>
+            `;
+
+            container.appendChild(div);
+        });
+
+    } catch (e) {
+        container.innerHTML = "Error loading data";
+    }
+}
+
+// search redirect
+function performSearch() {
+    const q = document.getElementById("searchInput").value;
+    if (!q) return;
+    sessionStorage.setItem("searchTerm", q);
+    window.location.href = "search.html";
+}
+
+// dark mode
+document.getElementById("darkModeToggle").onclick = () => {
+    document.documentElement.classList.toggle("dark");
+};
+
+// enter key
+document.getElementById("searchInput").addEventListener("keypress", e => {
+    if (e.key === "Enter") performSearch();
+});
+
+// init
+renderPopularGroups();
+</script>
+
+</body>
+</html>
