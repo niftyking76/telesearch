@@ -92,9 +92,14 @@
     <div id="popularGroupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 </div>
 
+
 <script>
-const API_URL = "https://teleapi.huntereye76.workers.dev/";
+const API = "https://teleapi.huntereye76.workers.dev/";
 const API_KEY = "myteleapikey7122";
+
+let timer;
+let currentPage = 1;
+let currentQuery = "";
 
 // format members
 function formatMemberCount(count) {
@@ -104,63 +109,161 @@ function formatMemberCount(count) {
     return count;
 }
 
-// fetch trending
-async function renderPopularGroups() {
-    const container = document.getElementById('popularGroupsContainer');
-    container.innerHTML = "Loading...";
+// 🔍 INPUT SEARCH (Debounce like your prototype)
+document.getElementById("searchInput").addEventListener("input", function () {
+    clearTimeout(timer);
+    const value = this.value.trim();
+
+    timer = setTimeout(() => {
+        currentQuery = value;
+        currentPage = 1;
+        fetchResults();
+    }, 400);
+});
+
+// 📡 FETCH DATA (MAIN FUNCTION)
+async function fetchResults() {
+    const container = document.getElementById("popularGroupsContainer");
+
+    container.innerHTML = `<p class="text-gray-500">Loading...</p>`;
+
+    let url = `${API}?page=${currentPage}&limit=6`;
+
+    if (currentQuery) {
+        url = `${API}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&limit=6`;
+    }
 
     try {
-        const res = await fetch(`${API_URL}?page=1&limit=6`, {
+        const res = await fetch(url, {
             headers: { "x-api-key": API_KEY }
         });
 
         const data = await res.json();
-        container.innerHTML = "";
 
-        data.results.forEach(group => {
-            const div = document.createElement("div");
-            div.className = "bg-white dark:bg-gray-800 rounded-lg p-6 shadow card-hover";
+        renderResults(data.results);
+        renderSuggestions(data.suggestions);
 
-            div.innerHTML = `
-                <h3 class="text-lg font-semibold">${group.title}</h3>
-                <p class="text-sm text-gray-500">${group.type}</p>
-                <p class="mt-2 text-sm">${group.description}</p>
-
-                <div class="mt-4 flex justify-between">
-                    <span>${formatMemberCount(group.members)} members</span>
-                    <a href="${group.link}" target="_blank" class="join-btn text-white px-3 py-1 rounded">Join</a>
-                </div>
-            `;
-
-            container.appendChild(div);
-        });
-
-    } catch (e) {
-        container.innerHTML = "Error loading data";
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500">Error loading data</p>`;
+        console.error(err);
     }
 }
 
-// search redirect
-function performSearch() {
-    const q = document.getElementById("searchInput").value;
-    if (!q) return;
-    sessionStorage.setItem("searchTerm", q);
-    window.location.href = "search.html";
+// 🧱 RENDER RESULTS (PRO UI STYLE)
+function renderResults(data) {
+    const container = document.getElementById("popularGroupsContainer");
+
+    if (!data || data.length === 0) {
+        container.innerHTML = `<p class="text-gray-500 text-center">No results found</p>`;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(group => {
+        const div = document.createElement("div");
+
+        div.className = "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in";
+
+        div.innerHTML = `
+            <div class="p-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg">
+                        <i class="fab fa-telegram text-2xl text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold">${group.title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            ${group.type === 'channel' ? 'Channel' : 'Group'}
+                        </p>
+                    </div>
+                </div>
+
+                <p class="mt-4 text-gray-600 dark:text-gray-300 text-sm">
+                    ${group.description}
+                </p>
+
+                <div class="mt-6 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-gray-400 dark:text-gray-500 mr-2"></i>
+                        <span class="text-sm font-medium">
+                            ${formatMemberCount(group.members)} members
+                        </span>
+                    </div>
+
+                    <a href="${group.link}" target="_blank"
+                        class="join-btn text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        Join
+                    </a>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
 }
 
-// dark mode
-document.getElementById("darkModeToggle").onclick = () => {
-    document.documentElement.classList.toggle("dark");
-};
+// 💡 SUGGESTIONS (same logic, styled minimal)
+function renderSuggestions(suggestions) {
+    let box = document.getElementById("suggestionsBox");
 
-// enter key
-document.getElementById("searchInput").addEventListener("keypress", e => {
+    // create if not exists
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "suggestionsBox";
+        box.className = "absolute w-full bg-white dark:bg-gray-800 mt-2 rounded-xl shadow-lg z-50";
+        document.getElementById("searchInput").parentElement.appendChild(box);
+    }
+
+    if (!suggestions || suggestions.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+
+    box.innerHTML = suggestions.map(s => `
+        <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            onclick="selectSuggestion('${s}')">
+            ${s}
+        </div>
+    `).join("");
+
+    box.style.display = "block";
+}
+
+// 👉 select suggestion
+function selectSuggestion(text) {
+    document.getElementById("searchInput").value = text;
+    currentQuery = text;
+    currentPage = 1;
+    document.getElementById("suggestionsBox").style.display = "none";
+    fetchResults();
+}
+
+// 🔘 button search (manual)
+function performSearch() {
+    const val = document.getElementById("searchInput").value.trim();
+    if (!val) return;
+
+    currentQuery = val;
+    currentPage = 1;
+    fetchResults();
+}
+
+// ⌨️ Enter key
+document.getElementById("searchInput").addEventListener("keypress", function(e) {
     if (e.key === "Enter") performSearch();
 });
 
-// init
-renderPopularGroups();
+// 🌙 dark mode
+document.getElementById('darkModeToggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+});
+
+// 🚀 INITIAL LOAD (TRENDING)
+fetchResults();
 </script>
+
+    
 
 </body>
 </html>
