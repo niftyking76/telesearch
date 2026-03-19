@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TeleSearch - Find Telegram Groups</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=line-clamp"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .fade-in {
@@ -91,6 +92,12 @@
     <h2 class="text-2xl font-bold mb-6">Trending Groups</h2>
     <div id="popularGroupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 </div>
+<!-- load more -->
+<div class="text-center mt-6">
+    <button onclick="loadMore()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        Load More
+    </button>
+</div>    
 
 
 <script>
@@ -122,7 +129,7 @@ document.getElementById("searchInput").addEventListener("input", function () {
 });
 
 // 📡 FETCH DATA (MAIN FUNCTION)
-async function fetchResults() {
+async function fetchResults(append = false) {
     const container = document.getElementById("popularGroupsContainer");
 
     container.innerHTML = `<p class="text-gray-500">Loading...</p>`;
@@ -140,7 +147,7 @@ async function fetchResults() {
 
         const data = await res.json();
 
-        renderResults(data.results);
+        renderResults(data.results, append);
         renderSuggestions(data.suggestions);
 
     } catch (err) {
@@ -150,23 +157,25 @@ async function fetchResults() {
 }
 
 // 🧱 RENDER RESULTS (PRO UI STYLE)
-function renderResults(data) {
+function renderResults(data, append = false) {
     const container = document.getElementById("popularGroupsContainer");
 
     if (!data || data.length === 0) {
-        container.innerHTML = `<p class="text-gray-500 text-center">No results found</p>`;
+        if (!append) {
+            container.innerHTML = `<p class="text-gray-500 text-center">No results found</p>`;
+        }
         return;
     }
 
-    container.innerHTML = "";
+    if (!append) container.innerHTML = "";
 
     data.forEach(group => {
         const div = document.createElement("div");
 
-        div.className = "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in";
+        div.className = "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in flex flex-col h-full";
 
         div.innerHTML = `
-            <div class="p-6">
+            <div class="p-6 flex flex-col h-full">
                 <div class="flex items-start">
                     <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg">
                         <i class="fab fa-telegram text-2xl text-blue-500 dark:text-blue-400"></i>
@@ -179,11 +188,11 @@ function renderResults(data) {
                     </div>
                 </div>
 
-                <p class="mt-4 text-gray-600 dark:text-gray-300 text-sm">
+                <p class="mt-4 text-gray-600 dark:text-gray-300 text-sm line-clamp-3 min-h-[60px]">
                     ${group.description}
                 </p>
 
-                <div class="mt-6 flex justify-between items-center">
+                <div class="mt-auto flex justify-between items-center pt-4">
                     <div class="flex items-center">
                         <i class="fas fa-users text-gray-400 dark:text-gray-500 mr-2"></i>
                         <span class="text-sm font-medium">
@@ -203,6 +212,8 @@ function renderResults(data) {
     });
 }
 
+
+    
 // 💡 SUGGESTIONS (same logic, styled minimal)
 function renderSuggestions(suggestions) {
     let box = document.getElementById("suggestionsBox");
@@ -240,14 +251,21 @@ function selectSuggestion(text) {
 }
 
 // 🔘 button search (manual)
-function performSearch() {
-    const val = document.getElementById("searchInput").value.trim();
-    if (!val) return;
+function renderResults(data, append = false) {
+    const container = document.getElementById("popularGroupsContainer");
 
-    currentQuery = val;
-    currentPage = 1;
-    fetchResults();
+    if (!append) container.innerHTML = "";
+
+    data.forEach(group => {
+        // same card code
+        container.appendChild(div);
+    });
 }
+
+function loadMore() {
+    currentPage++;
+    fetchResults(true); // append mode
+}    
 
 // ⌨️ Enter key
 document.getElementById("searchInput").addEventListener("keypress", function(e) {
