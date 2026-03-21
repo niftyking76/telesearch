@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeleSearch - Find Telegram Groups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=line-clamp"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-hover {
+            transition: all 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .dark .card-hover:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .join-btn {
+            background: linear-gradient(135deg, #0088cc, #00a2e8);
+            transition: all 0.2s ease;
+        }
+        .join-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.3);
+        }
+        .dark .join-btn:hover {
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.5);
+        }
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.2);
+        }
+        .dark .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.4);
+        }
+        .mobile-menu {
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .mobile-menu.open {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+
+<!-- NAVBAR SAME -->
+<nav class="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="index.html" class="flex items-center">
+                    <i class="fab fa-telegram text-2xl text-blue-500 mr-2"></i>
+                    <span class="text-xl font-bold">TeleSearch</span>
+                </a>
+            </div>
+            <div class="flex items-center">
+                <button id="darkModeToggle" class="p-2 rounded-full">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO SAME -->
+<div class="max-w-7xl mx-auto px-4 py-16 text-center">
+    <h1 class="text-4xl font-bold mb-6">Discover the Best Telegram Groups</h1>
+
+    <div class="max-w-2xl mx-auto relative">
+        <input id="searchInput" type="text" placeholder="Search..."
+            class="w-full px-6 py-4 rounded-full border dark:bg-gray-800 search-input">
+        <button onclick="performSearch()" class="absolute right-2 top-2 bg-blue-500 text-white p-2 rounded-full">
+            🔍
+        </button>
+    </div>
+</div>
+
+<!-- ✅ TRENDING SECTION -->
+<div class="max-w-7xl mx-auto px-4 pb-16">
+    <h2 class="text-2xl font-bold mb-6">Trending Groups</h2>
+    <div id="popularGroupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+<!-- load more -->
+<div class="text-center mt-6">
+    <button onclick="loadMore()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        Load More
+    </button>
+</div>    
+
+
+<script>
+
+const API = "https://apiv2secure.huntereye76.workers.dev/";  
+const API_KEY = "myteleapikey7122";
+
+let timer;
+let currentPage = 1;
+let currentQuery = "";
+
+// format members
+function formatMemberCount(count) {
+    if (!count) return "0";
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count;
+}
+
+// 🔍 INPUT SEARCH (Debounce like your prototype)
+document.getElementById("searchInput").addEventListener("input", function () {
+    clearTimeout(timer);
+    const value = this.value.trim();
+    if (!value) {
+        const box = document.getElementById("suggestionsBox");
+        if (box) box.style.display = "none";
+    }
+
+    timer = setTimeout(() => {
+        currentQuery = value;
+        currentPage = 1;
+        fetchResults();
+    }, 400);
+});
+
+// 📡 FETCH DATA (MAIN FUNCTION)
+async function fetchResults(append = false) {
+    const container = document.getElementById("popularGroupsContainer");
+
+    if (!append) {
+        container.innerHTML = `<p class="text-gray-500">Loading...</p>`;
+    }
+
+    const ts = Date.now();
+    
+    let url = `${API}?page=${currentPage}&limit=6&ts=${ts}`;
+    
+    if (currentQuery) {
+        url = `${API}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&limit=6&ts=${ts}`;
+    }
+  
+    try {
+        const res = await fetch(url, {
+          
+            fetch(url)
+        });
+
+        const data = await res.json();
+
+        renderResults(data.results, append);
+        renderSuggestions(data.suggestions);
+
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500">Error loading data</p>`;
+        console.error(err);
+    }
+}
+
+// 🧱 RENDER RESULTS (PRO UI STYLE)
+function renderResults(data, append = false) {
+    const container = document.getElementById("popularGroupsContainer");
+
+    if (!data || data.length === 0) {
+        if (!append) {
+            container.innerHTML = `<p class="text-gray-500 text-center">No results found</p>`;
+        }
+        return;
+    }
+
+    if (!append) container.innerHTML = "";
+
+    data.forEach(group => {
+        const div = document.createElement("div");
+
+        div.className = "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in flex flex-col h-full";
+
+        div.innerHTML = `
+            <div class="p-6 flex flex-col h-full">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg">
+                        <i class="fab fa-telegram text-2xl text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold line-clamp-2 min-h-[48px]">
+                            ${group.title}
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            ${group.type === 'channel' ? 'Channel' : 'Group'}
+                        </p>
+                    </div>
+                </div>
+
+                <p class="mt-4 text-gray-600 dark:text-gray-300 text-sm line-clamp-3 min-h-[60px]">
+                    ${group.description}
+                </p>
+
+                <div class="mt-auto flex justify-between items-center pt-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-gray-400 dark:text-gray-500 mr-2"></i>
+                        <span class="text-sm font-medium">
+                            ${formatMemberCount(group.members)} members
+                        </span>
+                    </div>
+
+                    <a href="${group.link}" target="_blank"
+                        class="join-btn text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        Join
+                    </a>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+
+    
+// 💡 SUGGESTIONS (same logic, styled minimal)
+function renderSuggestions(suggestions) {
+    let box = document.getElementById("suggestionsBox");
+
+    // create if not exists
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "suggestionsBox";
+        box.className = "absolute w-full bg-white dark:bg-gray-800 mt-2 rounded-xl shadow-lg z-50";
+        document.getElementById("searchInput").parentElement.appendChild(box);
+    }
+
+    if (!suggestions || suggestions.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+
+    box.innerHTML = suggestions.map(s => `
+        <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            onclick="selectSuggestion('${s}')">
+            ${s}
+        </div>
+    `).join("");
+
+    box.style.display = "block";
+}
+
+// 👉 select suggestion
+function selectSuggestion(text) {
+    document.getElementById("searchInput").value = text;
+    currentQuery = text;
+    currentPage = 1;
+    document.getElementById("suggestionsBox").style.display = "none";
+    fetchResults();
+}
+
+
+
+function loadMore() {
+    currentPage++;
+    fetchResults(true); // append mode
+}    
+
+function performSearch() {
+    currentQuery = document.getElementById("searchInput").value.trim();
+    currentPage = 1;
+
+    // ✅ HIDE suggestions
+    const box = document.getElementById("suggestionsBox");
+    if (box) box.style.display = "none";
+
+    fetchResults();
+}
+    
+
+// ⌨️ Enter key
+document.getElementById("searchInput").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") performSearch();
+});
+
+// 🌙 dark mode
+document.getElementById('darkModeToggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+});
+
+// 🚀 INITIAL LOAD (TRENDING)
+fetchResults();
+
+
+document.addEventListener("click", (e) => {
+    const box = document.getElementById("suggestionsBox");
+
+    if (!e.target.closest("#searchInput")) {
+        if (box) box.style.display = "none";
+    }
+});    
+
+
+    
+</script>
+
+    
+
+</body>
+</html>
