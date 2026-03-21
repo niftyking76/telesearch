@@ -151,6 +151,13 @@ async function fetchResults(append = false) {
   
     try {
         const res = await fetch(url);
+
+        if (!res.ok) {
+            const text = await res.text();
+            console.error("API Error:", text);
+            return;
+        }
+        
         const data = await res.json();
 
         renderResults(data.results, append);
