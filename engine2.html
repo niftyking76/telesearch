@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TeleSearch - Find Telegram Groups</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=line-clamp"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .fade-in {
@@ -40,12 +41,6 @@
         }
         .dark .search-input:focus {
             box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.4);
-        }
-        .category-chip {
-            transition: all 0.2s ease;
-        }
-        .category-chip:hover {
-            transform: scale(1.05);
         }
         .mobile-menu {
             transition: all 0.3s ease;
@@ -98,40 +93,35 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <div class="text-center">
-            <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-6">Discover the Best Telegram Groups</h1>
-            <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
-                Find active communities, channels, and groups on any topic. Join millions of users in thousands of groups.
-            </p>
-            
-            <!-- Search Bar -->
-            <div class="max-w-2xl mx-auto relative">
-                <div class="relative">
-                    <input type="text" id="searchInput" placeholder="Search Telegram groups and channels..." 
-                        class="w-full px-6 py-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white search-input">
-                    <button onclick="performSearch()" class="absolute right-2 top-2 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
+<!-- HERO SAME -->
+<div class="max-w-7xl mx-auto px-4 py-16 text-center">
+    <h1 class="text-4xl font-bold mb-6">Discover the Best Telegram Groups</h1>
+    <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
+        Find active communities, channels, and groups on any topic. Join millions of users in thousands of groups.
+    </p>
+
+    <div class="max-w-2xl mx-auto relative">
+        <input id="searchInput" type="text" placeholder="Search..."
+            class="w-full px-6 py-4 rounded-full border dark:bg-gray-800 search-input">
+        <button onclick="performSearch()" class="absolute right-2 top-2 bg-blue-500 text-white p-2 rounded-full">
+            🔍
+        </button>
     </div>
+</div>
 
-    <!-- Trending Categories -->
-    
+<!-- ✅ TRENDING SECTION -->
+<div class="max-w-7xl mx-auto px-4 pb-16">
+    <h2 class="text-2xl font-bold mb-6">Trending Groups</h2>
+    <div id="popularGroupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+<!-- load more -->
+<div class="text-center mt-6">
+    <button onclick="loadMore()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        Load More
+    </button>
+</div>    
 
-    <!-- Popular Groups -->
-    
-
-    <!-- Stats Section -->
-
-
-    <!-- CTA Section -->
-    
-
-    <!-- Footer -->
+<!-- Footer -->
     <footer class="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -169,163 +159,244 @@
                 <p>© 2023 TeleSearch. All rights reserved.</p>
             </div>
         </div>
-    </footer>
+    </footer>    
 
-    <script>
-        // Mock data for groups
-        const mockGroups = [
-            {
-                id: 1,
-                title: "Crypto Traders Hub",
-                description: "The largest community for cryptocurrency traders. Daily signals, market analysis, and discussions.",
-                members: 125000,
-                category: "crypto",
-                isChannel: false,
-                dateAdded: "2023-05-15"
-            },
-            {
-                id: 2,
-                title: "Tech News Daily",
-                description: "Stay updated with the latest in technology, gadgets, and software developments.",
-                members: 87600,
-                category: "technology",
-                isChannel: true,
-                dateAdded: "2023-06-22"
-            },
-            {
-                id: 3,
-                title: "Anime Lovers",
-                description: "Discuss your favorite anime, manga, and Japanese culture with fellow enthusiasts.",
-                members: 65400,
-                category: "anime",
-                isChannel: false,
-                dateAdded: "2023-04-10"
-            },
-            {
-                id: 4,
-                title: "Stock Market Insights",
-                description: "Professional traders sharing insights, analysis, and stock market predictions.",
-                members: 43200,
-                category: "trading",
-                isChannel: false,
-                dateAdded: "2023-07-05"
-            },
-            {
-                id: 5,
-                title: "Programming Help",
-                description: "Get help with coding problems, learn new technologies, and collaborate on projects.",
-                members: 98700,
-                category: "programming",
-                isChannel: false,
-                dateAdded: "2023-03-18"
-            },
-            {
-                id: 6,
-                title: "Movie Buffs",
-                description: "Discuss films, TV shows, and get recommendations from fellow cinephiles.",
-                members: 32100,
-                category: "movies",
-                isChannel: false,
-                dateAdded: "2023-08-12"
+
+<script>
+
+const API = "https://telegram-api.huntereye76.workers.dev/";  
+const API_KEY = "712260";
+
+let timer;
+let currentPage = 1;
+let currentQuery = "";
+
+// format members
+function formatMemberCount(count) {
+    if (!count) return "0";
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count;
+}
+
+// 🔍 INPUT SEARCH (Debounce like your prototype)
+document.getElementById("searchInput").addEventListener("input", function () {
+    clearTimeout(timer);
+    const value = this.value.trim();
+    if (!value) {
+        const box = document.getElementById("suggestionsBox");
+        if (box) box.style.display = "none";
+    }
+
+    timer = setTimeout(() => {
+        currentQuery = value;
+        currentPage = 1;
+        fetchResults();
+    }, 400);
+});
+
+// 📡 FETCH DATA (MAIN FUNCTION)
+async function fetchResults(append = false) {
+    const container = document.getElementById("popularGroupsContainer");
+
+    if (!append) {
+        container.innerHTML = `<p class="text-gray-500">Loading...</p>`;
+    }
+
+    
+    const token = await getToken();
+
+    if (!token) {
+        container.innerHTML = `<p class="text-red-500">Token error</p>`;
+        return;
+    }
+    
+    const { ts, sig } = token;
+    
+    let url = `${API}?page=${currentPage}&limit=6&ts=${ts}&sig=${sig}`;
+    
+    if (currentQuery) {
+        url = `${API}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&limit=6&ts=${ts}&sig=${sig}`;
+    }
+  
+    try {
+        const res = await fetch(url, {
+            headers: {
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9"
             }
-        ];
-
-        // Format member count
-        function formatMemberCount(count) {
-            if (count >= 1000000) {
-                return (count / 1000000).toFixed(1) + 'M';
-            } else if (count >= 1000) {
-                return (count / 1000).toFixed(1) + 'K';
-            }
-            return count.toString();
-        }
-
-        // Render popular groups
-        function renderPopularGroups() {
-            const container = document.getElementById('popularGroupsContainer');
-            container.innerHTML = '';
-            
-            // Sort by member count and take first 6
-            const popularGroups = [...mockGroups].sort((a, b) => b.members - a.members).slice(0, 6);
-            
-            popularGroups.forEach(group => {
-                const groupElement = document.createElement('div');
-                groupElement.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in';
-                groupElement.innerHTML = `
-                    <div class="p-6">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg">
-                                <i class="fab fa-telegram text-2xl text-blue-500 dark:text-blue-400"></i>
-                            </div>
-                            <div class="ml-4">
-                                <h3 class="text-lg font-semibold">${group.title}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${group.isChannel ? 'Channel' : 'Group'}</p>
-                            </div>
-                        </div>
-                        <p class="mt-4 text-gray-600 dark:text-gray-300 text-sm">${group.description}</p>
-                        <div class="mt-6 flex justify-between items-center">
-                            <div class="flex items-center">
-                                <i class="fas fa-users text-gray-400 dark:text-gray-500 mr-2"></i>
-                                <span class="text-sm font-medium">${formatMemberCount(group.members)} members</span>
-                            </div>
-                            <a href="group.html?id=${group.id}" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">View</a>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(groupElement);
-            });
-        }
-
-        // Perform search
-        function performSearch() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            if (searchTerm) {
-                // Store search term in session storage to use on search page
-                sessionStorage.setItem('searchTerm', searchTerm);
-                window.location.href = 'search.html';
-            }
-        }
-
-        // Dark mode toggle
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('darkMode', 'light');
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('darkMode', 'dark');
-            }
-        }
-
-        // Mobile menu toggle
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('open');
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check for dark mode preference
-            if (localStorage.getItem('darkMode') === 'dark' || 
-                (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            }
-            
-            // Set up event listeners
-            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
-            document.getElementById('mobileMenuButton').addEventListener('click', toggleMobileMenu);
-            
-            // Allow search on Enter key
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
-            });
-            
-            // Render popular groups
-            renderPopularGroups();
         });
-    </script>
+        
+        if (!res.ok) {
+            const text = await res.text();
+            console.error("API Error:", text);
+            return;
+        }
+        
+        const data = await res.json();
+
+        renderResults(data.results, append);
+        renderSuggestions(data.suggestions);
+
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500">Error loading data</p>`;
+        console.error(err);
+    }
+}
+
+// 🧱 RENDER RESULTS (PRO UI STYLE)
+function renderResults(data, append = false) {
+    const container = document.getElementById("popularGroupsContainer");
+
+    if (!data || data.length === 0) {
+        if (!append) {
+            container.innerHTML = `<p class="text-gray-500 text-center">No results found</p>`;
+        }
+        return;
+    }
+
+    if (!append) container.innerHTML = "";
+
+    data.forEach(group => {
+        const div = document.createElement("div");
+
+        div.className = "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in flex flex-col h-full";
+
+        div.innerHTML = `
+            <div class="p-6 flex flex-col h-full">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg">
+                        <i class="fab fa-telegram text-2xl text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold line-clamp-2 min-h-[48px]">
+                            ${group.title}
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            ${group.type === 'channel' ? 'Channel' : 'Group'}
+                        </p>
+                    </div>
+                </div>
+
+                <p class="mt-4 text-gray-600 dark:text-gray-300 text-sm line-clamp-3 min-h-[60px]">
+                    ${group.description}
+                </p>
+
+                <div class="mt-auto flex justify-between items-center pt-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-gray-400 dark:text-gray-500 mr-2"></i>
+                        <span class="text-sm font-medium">
+                            ${formatMemberCount(group.members)} members
+                        </span>
+                    </div>
+
+                    <a href="${group.link}" target="_blank"
+                        class="join-btn text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        Join
+                    </a>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+
+    
+// 💡 SUGGESTIONS (same logic, styled minimal)
+function renderSuggestions(suggestions) {
+    let box = document.getElementById("suggestionsBox");
+
+    // create if not exists
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "suggestionsBox";
+        box.className = "absolute w-full bg-white dark:bg-gray-800 mt-2 rounded-xl shadow-lg z-50";
+        document.getElementById("searchInput").parentElement.appendChild(box);
+    }
+
+    if (!suggestions || suggestions.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+
+    box.innerHTML = suggestions.map(s => `
+        <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            onclick="selectSuggestion('${s}')">
+            ${s}
+        </div>
+    `).join("");
+
+    box.style.display = "block";
+}
+
+// 👉 select suggestion
+function selectSuggestion(text) {
+    document.getElementById("searchInput").value = text;
+    currentQuery = text;
+    currentPage = 1;
+    document.getElementById("suggestionsBox").style.display = "none";
+    fetchResults();
+}
+
+
+
+function loadMore() {
+    currentPage++;
+    fetchResults(true); // append mode
+}    
+
+function performSearch() {
+    currentQuery = document.getElementById("searchInput").value.trim();
+    currentPage = 1;
+
+    // ✅ HIDE suggestions
+    const box = document.getElementById("suggestionsBox");
+    if (box) box.style.display = "none";
+
+    fetchResults();
+}
+    
+
+// ⌨️ Enter key
+document.getElementById("searchInput").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") performSearch();
+});
+
+// 🌙 dark mode
+document.getElementById('darkModeToggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+});
+
+async function getToken() {
+    try {
+        const res = await fetch(API + "token");
+        const data = await res.json();
+        return data;
+    } catch (err) {
+        console.error("Token error:", err);
+        return null;
+    }
+}  
+
+// 🚀 INITIAL LOAD (TRENDING)
+fetchResults();
+
+
+document.addEventListener("click", (e) => {
+    const box = document.getElementById("suggestionsBox");
+
+    if (!e.target.closest("#searchInput")) {
+        if (box) box.style.display = "none";
+    }
+});    
+
+
+    
+</script>
+
+    
+
 </body>
 </html>
