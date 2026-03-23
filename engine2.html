@@ -177,7 +177,7 @@ function formatMemberCount(count) {
     if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
     if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
     return count;
-}
+}    
 
 // 🔍 INPUT SEARCH (Debounce like your prototype)
 document.getElementById("searchInput").addEventListener("input", function () {
@@ -339,6 +339,14 @@ function selectSuggestion(text) {
     document.getElementById("suggestionsBox").style.display = "none";
     fetchResults();
 }
+
+
+// Mobile menu toggle
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('open');
+}
+
 
 
 
