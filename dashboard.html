@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>⚡ Advanced Analytics Dashboard</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  background: #020617;
+  font-family: 'Segoe UI', sans-serif;
+}
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.glow {
+  box-shadow: 0 0 20px rgba(0,255,255,0.2);
+}
+</style>
+</head>
+
+<body class="text-white p-6">
+
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold tracking-wide">⚡ Analytics Control Panel</h1>
+  <div class="flex items-center gap-2">
+    <span id="statusDot" class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+    <span class="text-sm text-gray-400">LIVE</span>
+  </div>
+</div>
+
+<div class="grid md:grid-cols-4 gap-6 mb-8">
+
+  <div class="glass glow p-5 rounded-xl">
+    <p class="text-gray-400">Total Requests</p>
+    <h2 id="total" class="text-3xl font-bold mt-2">0</h2>
+  </div>
+
+  <div class="glass glow p-5 rounded-xl">
+    <p class="text-gray-400">Active Users</p>
+    <h2 id="active" class="text-3xl font-bold mt-2">0</h2>
+  </div>
+
+  <div class="glass glow p-5 rounded-xl">
+    <p class="text-gray-400">Requests / Minute</p>
+    <h2 id="rpm" class="text-3xl font-bold mt-2">0</h2>
+  </div>
+
+  <div class="glass glow p-5 rounded-xl">
+    <p class="text-gray-400">Top Query</p>
+    <h2 id="topQuery" class="text-lg mt-2">-</h2>
+  </div>
+
+</div>
+
+<div class="grid md:grid-cols-2 gap-6 mb-8">
+
+  <div class="glass p-5 rounded-xl">
+    <h2 class="mb-4 text-lg">📈 Requests Over Time</h2>
+    <canvas id="lineChart"></canvas>
+  </div>
+
+  <div class="glass p-5 rounded-xl">
+    <h2 class="mb-4 text-lg">🔥 Top Queries</h2>
+    <canvas id="barChart"></canvas>
+  </div>
+
+</div>
+
+<div class="glass p-6 rounded-xl">
+  <h2 class="text-lg mb-4">📊 Query Details</h2>
+  <table class="w-full text-left">
+    <thead>
+      <tr class="text-gray-400">
+        <th class="pb-2">Query</th>
+        <th class="pb-2">Count</th>
+      </tr>
+    </thead>
+    <tbody id="tableData"></tbody>
+  </table>
+</div>
+
+<script>
+const API = "https://telegram-api.huntereye76.workers.dev/stats";
+
+let lineChart, barChart;
+let history = [];
+
+async function loadData() {
+  try {
+    const res = await fetch(API);
+    const data = await res.json();
+
+    document.getElementById("total").innerText = data.total_requests;
+    document.getElementById("active").innerText = data.active_users;
+    document.getElementById("rpm").innerText = data.requests_per_minute;
+
+    if (data.top_queries.length > 0) {
+      document.getElementById("topQuery").innerText = data.top_queries[0][0];
+    }
+
+    history.push(data.requests_per_minute);
+    if (history.length > 20) history.shift();
+
+    updateCharts(data);
+    updateTable(data.top_queries);
+
+  } catch (err) {
+    document.getElementById("statusDot").classList.remove("bg-green-400");
+    document.getElementById("statusDot").classList.add("bg-red-500");
+  }
+}
+
+function updateCharts(data) {
+
+  if (!lineChart) {
+    lineChart = new Chart(document.getElementById("lineChart"), {
+      type: "line",
+      data: {
+        labels: history.map((_, i) => i),
+        datasets: [{
+          label: "RPM",
+          data: history,
+          borderColor: "#00ffff",
+          tension: 0.4
+        }]
+      }
+    });
+  } else {
+    lineChart.data.labels = history.map((_, i) => i);
+    lineChart.data.datasets[0].data = history;
+    lineChart.update();
+  }
+
+  const labels = data.top_queries.map(q => q[0]);
+  const values = data.top_queries.map(q => q[1]);
+
+  if (!barChart) {
+    barChart = new Chart(document.getElementById("barChart"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Search Count",
+          data: values,
+          backgroundColor: "#22c55e"
+        }]
+      }
+    });
+  } else {
+    barChart.data.labels = labels;
+    barChart.data.datasets[0].data = values;
+    barChart.update();
+  }
+}
+
+function updateTable(queries) {
+  const tbody = document.getElementById("tableData");
+  tbody.innerHTML = "";
+
+  queries.forEach(([q, c]) => {
+    tbody.innerHTML += `
+      <tr class="border-t border-gray-700">
+        <td class="py-2">${q}</td>
+        <td class="py-2">${c}</td>
+      </tr>
+    `;
+  });
+}
+
+loadData();
+setInterval(loadData, 5000);
+</script>
+
+</body>
+</html>
