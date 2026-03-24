@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -303,7 +303,9 @@ function setType(type) {
     active.classList.add("bg-blue-500", "text-white", "shadow-md");
     active.classList.remove("bg-gray-200", "dark:bg-gray-700");
 
-}    
+    fetchResults();   // ✅ IMPORTANT
+    saveState();      // ✅ IMPORTANT
+}   
     
 
 // 🔍 INPUT SEARCH (Debounce like your prototype)
@@ -471,6 +473,7 @@ function selectSuggestion(text) {
     currentPage = 1;
     document.getElementById("suggestionsBox").style.display = "none";
     fetchResults();
+    saveState();   
 }
 
 
@@ -514,6 +517,16 @@ document.getElementById("searchInput").addEventListener("keypress", function(e) 
 // 🌙 dark mode
 const themeToggle = document.getElementById('darkModeToggle');
 
+themeToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+
+    if (document.documentElement.classList.contains("dark")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
+});
+
 
 // 🌙 Toggle + Save
 themeToggle.addEventListener('click', () => {
@@ -543,15 +556,14 @@ function saveState() {
     localStorage.setItem("searchPage", currentPage);
 }
 
-function loadState() {
+async function loadState() {
     currentQuery = localStorage.getItem("searchQuery") || "";
     currentType = localStorage.getItem("searchType") || "all";
     currentPage = parseInt(localStorage.getItem("searchPage")) || 1;
 
-    // restore input
     document.getElementById("searchInput").value = currentQuery;
 
-    // restore type UI (without triggering fetch)
+    // restore UI
     document.querySelectorAll(".type-btn").forEach(btn => {
         btn.classList.remove("bg-blue-500", "text-white", "shadow-md");
         btn.classList.add("bg-gray-200", "dark:bg-gray-700");
@@ -563,9 +575,12 @@ function loadState() {
         active.classList.remove("bg-gray-200", "dark:bg-gray-700");
     }
 
-    // NOW fetch with restored state
-    fetchResults();
-}   
+    // 🔥 load ALL pages till saved page
+    for (let i = 1; i <= currentPage; i++) {
+        currentPage = i;
+        await fetchResults(i !== 1); // append from page 2+
+    }
+}  
 
 // 🚀 INITIAL LOAD (TRENDING)
 loadState();
