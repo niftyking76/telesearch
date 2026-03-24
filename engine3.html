@@ -9,6 +9,8 @@
     <script>
         if (localStorage.getItem("theme") === "dark") {
             document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -489,6 +491,34 @@ document.querySelectorAll("#mobileMenu a").forEach(link => {
     });
 });
 
+async function loadState() {
+    currentQuery = localStorage.getItem("searchQuery") || "";
+    currentType = localStorage.getItem("searchType") || "all";
+    const savedPage = parseInt(localStorage.getItem("searchPage")) || 1;
+
+    document.getElementById("searchInput").value = currentQuery;
+
+    // restore UI
+    document.querySelectorAll(".type-btn").forEach(btn => {
+        btn.classList.remove("bg-blue-500", "text-white", "shadow-md");
+        btn.classList.add("bg-gray-200", "dark:bg-gray-700");
+    });
+
+    const active = document.getElementById("type-" + currentType);
+    if (active) {
+        active.classList.add("bg-blue-500", "text-white", "shadow-md");
+        active.classList.remove("bg-gray-200", "dark:bg-gray-700");
+    }
+
+    // 🔥 FIXED LOOP
+    for (let i = 1; i <= savedPage; i++) {
+        currentPage = i;
+        await fetchResults(i !== 1);
+    }
+
+    // restore correct page at end
+    currentPage = savedPage;
+}    
 
 function loadMore() {
     currentPage++;
@@ -499,6 +529,8 @@ function loadMore() {
 function performSearch() {
     currentQuery = document.getElementById("searchInput").value.trim();
     currentPage = 1;
+
+    document.getElementById("popularGroupsContainer").innerHTML = "Loading...";
 
     // ✅ HIDE suggestions
     const box = document.getElementById("suggestionsBox");
@@ -517,18 +549,6 @@ document.getElementById("searchInput").addEventListener("keypress", function(e) 
 // 🌙 dark mode
 const themeToggle = document.getElementById('darkModeToggle');
 
-themeToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-
-    if (document.documentElement.classList.contains("dark")) {
-        localStorage.setItem("theme", "dark");
-    } else {
-        localStorage.setItem("theme", "light");
-    }
-});
-
-
-// 🌙 Toggle + Save
 themeToggle.addEventListener('click', () => {
     document.documentElement.classList.toggle('dark');
 
