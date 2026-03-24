@@ -505,8 +505,22 @@ document.getElementById("searchInput").addEventListener("keypress", function(e) 
 });
 
 // 🌙 dark mode
-document.getElementById('darkModeToggle').addEventListener('click', () => {
+const themeToggle = document.getElementById('darkModeToggle');
+
+// 🔄 Load saved theme
+if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+}
+
+// 🌙 Toggle + Save
+themeToggle.addEventListener('click', () => {
     document.documentElement.classList.toggle('dark');
+
+    if (document.documentElement.classList.contains("dark")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
 });
 
 async function getToken() {
