@@ -6,6 +6,11 @@
     <title>TeleSearch - Find Telegram Groups</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.tailwindcss.com?plugins=line-clamp"></script>
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .fade-in {
@@ -298,7 +303,6 @@ function setType(type) {
     active.classList.add("bg-blue-500", "text-white", "shadow-md");
     active.classList.remove("bg-gray-200", "dark:bg-gray-700");
 
-    fetchResults();
 }    
     
 
@@ -315,6 +319,7 @@ document.getElementById("searchInput").addEventListener("input", function () {
         currentQuery = value;
         currentPage = 1;
         fetchResults();
+        saveState();
     }, 400);
 });
 
@@ -484,6 +489,7 @@ document.querySelectorAll("#mobileMenu a").forEach(link => {
 
 function loadMore() {
     currentPage++;
+    saveState();
     fetchResults(true); // append mode
 }    
 
@@ -496,6 +502,7 @@ function performSearch() {
     if (box) box.style.display = "none";
 
     fetchResults();
+    saveState();
 }
     
 
@@ -507,10 +514,6 @@ document.getElementById("searchInput").addEventListener("keypress", function(e) 
 // 🌙 dark mode
 const themeToggle = document.getElementById('darkModeToggle');
 
-// 🔄 Load saved theme
-if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-}
 
 // 🌙 Toggle + Save
 themeToggle.addEventListener('click', () => {
@@ -534,8 +537,38 @@ async function getToken() {
     }
 }  
 
+function saveState() {
+    localStorage.setItem("searchQuery", currentQuery);
+    localStorage.setItem("searchType", currentType);
+    localStorage.setItem("searchPage", currentPage);
+}
+
+function loadState() {
+    currentQuery = localStorage.getItem("searchQuery") || "";
+    currentType = localStorage.getItem("searchType") || "all";
+    currentPage = parseInt(localStorage.getItem("searchPage")) || 1;
+
+    // restore input
+    document.getElementById("searchInput").value = currentQuery;
+
+    // restore type UI (without triggering fetch)
+    document.querySelectorAll(".type-btn").forEach(btn => {
+        btn.classList.remove("bg-blue-500", "text-white", "shadow-md");
+        btn.classList.add("bg-gray-200", "dark:bg-gray-700");
+    });
+
+    const active = document.getElementById("type-" + currentType);
+    if (active) {
+        active.classList.add("bg-blue-500", "text-white", "shadow-md");
+        active.classList.remove("bg-gray-200", "dark:bg-gray-700");
+    }
+
+    // NOW fetch with restored state
+    fetchResults();
+}   
+
 // 🚀 INITIAL LOAD (TRENDING)
-fetchResults();
+loadState();
 
 
 document.addEventListener("click", (e) => {
