@@ -336,6 +336,9 @@ document.getElementById("searchInput").addEventListener("input", function () {
     }, 400);
 });
 
+// Add this variable at the very top of your <script>, outside any function
+let lastToken = { ts: '', sig: '' };    
+
 // 📡 FETCH DATA (MAIN FUNCTION)
 async function fetchResults(append = false) {
     const container = document.getElementById("popularGroupsContainer");
@@ -351,6 +354,8 @@ async function fetchResults(append = false) {
         container.innerHTML = `<p class="text-red-500">Token error</p>`;
         return;
     }
+    // ✅ ADD THIS LINE HERE
+    lastToken = token; // This saves the ts and sig for the "View Details" buttons
     
     const { ts, sig } = token;
     
@@ -436,9 +441,11 @@ function renderResults(data, append = false) {
                         </span>
                     </div>
 
-                    <a href="group.html?id=${group.slug}" 
-                        class="join-btn text-white px-4 py-2 rounded-lg text-sm font-medium text-center">
-                        View Details
+                    
+                    // NEW CODE
+                    <a href="group.html?id=${group.slug}&ts=${lastToken.ts}&sig=${lastToken.sig}" 
+                       class="join-btn text-white px-4 py-2 rounded-lg text-sm font-medium text-center">
+                       View Details
                     </a>
                 </div>
             </div>
