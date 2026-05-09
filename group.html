@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Details - TeleSearch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="max-w-2xl mx-auto py-20 px-4">
+        <div id="loader" class="text-center text-blue-500 font-bold">Loading secure link...</div>
+        
+        <div id="content" class="hidden bg-white p-8 rounded-3xl shadow-xl border border-blue-50">
+            <h1 id="title" class="text-3xl font-bold mb-4"></h1>
+            <p id="desc" class="text-gray-600 mb-8"></p>
+            
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-center">
+                <p class="text-sm text-blue-700 mb-4">Click below to access the Telegram group safely.</p>
+                <div id="join-area">
+                    <button onclick="startRedirect()" id="main-btn" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                        Join Group
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('id');
+        let hiddenLink = "";
+
+        async function loadDetails() {
+            try {
+                // Call your new secure endpoint
+                const res = await fetch(`https://telegram-api.huntereye76.workers.dev/group-details?id=${slug}`);
+                const data = await res.json();
+                
+                document.getElementById('title').innerText = data.title;
+                document.getElementById('desc').innerText = data.description;
+                hiddenLink = data.link; // Save the link in memory
+
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            } catch (err) {
+                document.getElementById('loader').innerText = "Error: Group not found.";
+            }
+        }
+
+        function startRedirect() {
+            const btn = document.getElementById('main-btn');
+            btn.disabled = true;
+            btn.innerText = "Verifying connection...";
+            
+            // Simple anti-bot delay
+            setTimeout(() => {
+                window.location.href = hiddenLink;
+            }, 1500);
+        }
+
+        loadDetails();
+    </script>
+</body>
+</html>
