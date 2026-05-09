@@ -5,60 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Group Details - TeleSearch</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Theme sync with engine3
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .dark .glass-card {
+            background: rgba(31, 41, 55, 0.95);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-    <div class="max-w-2xl mx-auto py-20 px-4">
-        <div id="loader" class="text-center text-blue-500 font-bold">Loading secure link...</div>
-        
-        <div id="content" class="hidden bg-white p-8 rounded-3xl shadow-xl border border-blue-50">
-            <h1 id="title" class="text-3xl font-bold mb-4"></h1>
-            <p id="desc" class="text-gray-600 mb-8"></p>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+
+    <nav class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-4">
+        <div class="max-w-4xl mx-auto flex items-center">
+            <a href="engine3.html" class="text-blue-500 hover:text-blue-600 flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i>
+                <span class="font-medium">Back to Search</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div id="group-container" class="max-w-xl w-full glass-card rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 p-8 text-center">
             
-            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-center">
-                <p class="text-sm text-blue-700 mb-4">Click below to access the Telegram group safely.</p>
-                <div id="join-area">
-                    <button onclick="startRedirect()" id="main-btn" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                        Join Group
-                    </button>
+            <div id="loader">
+                <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full mx-auto flex items-center justify-center mb-6">
+                    <i class="fas fa-circle-notch fa-spin text-3xl text-blue-500"></i>
                 </div>
+                <h2 class="text-xl font-bold mb-2">Verifying Security...</h2>
+                <p class="text-gray-500">Checking connection and bot status.</p>
+            </div>
+
+            <div id="error-box" class="hidden">
+                <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+                <h2 class="text-2xl font-bold mb-2">Invalid Access</h2>
+                <p class="text-gray-500 mb-6" id="error-msg">Token expired or link is invalid. Please return to search.</p>
+                <a href="engine3.html" class="bg-blue-600 text-white px-6 py-2 rounded-full inline-block">Go Back</a>
+            </div>
+
+            <div id="content-box" class="hidden text-left">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="bg-blue-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
+                        <i class="fab fa-telegram-plane"></i>
+                    </div>
+                    <div>
+                        <h1 id="g-title" class="text-2xl font-black leading-tight text-gray-900 dark:text-white"></h1>
+                        <p id="g-members" class="text-blue-500 font-bold text-sm"></p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 dark:bg-gray-800/50 p-5 rounded-2xl mb-8">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description</h4>
+                    <p id="g-desc" class="text-gray-600 dark:text-gray-300 leading-relaxed"></p>
+                </div>
+
+                <button id="join-btn" onclick="handleJoin()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl flex items-center justify-center gap-3">
+                    <span id="btn-text">Check Telegram Availability</span>
+                    <i id="btn-icon" class="fas fa-shield-alt"></i>
+                </button>
+                <p class="text-center text-[10px] text-gray-400 mt-4 uppercase tracking-tighter">Secure connection encrypted via TeleSearch Protocol</p>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const slug = urlParams.get('id');
+        const API_BASE = "https://telegram-api.huntereye76.workers.dev/"; // 🚨 PASTE YOUR CLOUDFLARE WORKER URL HERE
+        
         let hiddenLink = "";
+        let isWaiting = false;
 
-        async function loadDetails() {
+        async function loadGroupDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get("id");
+            const ts = params.get("ts");
+            const sig = params.get("sig");
+
+            if (!id || !ts || !sig) {
+                showError("Missing security credentials. Please use the search page.");
+                return;
+            }
+
             try {
-                // Call your new secure endpoint
-                const res = await fetch(`https://telegram-api.huntereye76.workers.dev/group-details?id=${slug}`);
-                const data = await res.json();
-                
-                document.getElementById('title').innerText = data.title;
-                document.getElementById('desc').innerText = data.description;
-                hiddenLink = data.link; // Save the link in memory
+                const response = await fetch(`${API_BASE}/group-details?id=${id}&ts=${ts}&sig=${sig}`, {
+                    headers: {
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9",
+                        "Accept-Language": "en-US,en;q=0.9"
+                    }
+                });
 
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText || "Access Denied");
+                }
+
+                const data = await response.json();
+                
+                // Populating data
+                document.getElementById('g-title').innerText = data.title;
+                document.getElementById('g-desc').innerText = data.description;
+                document.getElementById('g-members').innerText = `${data.members} ${data.type === 'channel' ? 'Subscribers' : 'Members'}`;
+                hiddenLink = data.link;
+
+                // Show Content
                 document.getElementById('loader').classList.add('hidden');
-                document.getElementById('content').classList.remove('hidden');
+                document.getElementById('content-box').classList.remove('hidden');
+
             } catch (err) {
-                document.getElementById('loader').innerText = "Error: Group not found.";
+                showError(err.message);
             }
         }
 
-        function startRedirect() {
-            const btn = document.getElementById('main-btn');
-            btn.disabled = true;
-            btn.innerText = "Verifying connection...";
+        function handleJoin() {
+            if (isWaiting) return;
+            isWaiting = true;
+
+            const btn = document.getElementById('join-btn');
+            const btnText = document.getElementById('btn-text');
+            const icon = document.getElementById('btn-icon');
             
-            // Simple anti-bot delay
-            setTimeout(() => {
-                window.location.href = hiddenLink;
-            }, 1500);
+            let timeLeft = 3;
+            btn.classList.replace('bg-blue-600', 'bg-gray-500');
+            icon.className = "fas fa-hourglass-half fa-spin";
+
+            const timer = setInterval(() => {
+                btnText.innerText = `Redirecting in ${timeLeft}s...`;
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    clearInterval(timer);
+                    window.location.href = hiddenLink;
+                }
+            }, 1000);
         }
 
-        loadDetails();
+        function showError(msg) {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('error-box').classList.remove('hidden');
+            document.getElementById('error-msg').innerText = msg;
+        }
+
+        // Start loading
+        loadGroupDetails();
     </script>
 </body>
 </html>
