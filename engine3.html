@@ -396,6 +396,7 @@ async function fetchResults(append = false) {
 }
 
 // 🧱 RENDER RESULTS (PRO UI STYLE)
+// 🧱 RENDER RESULTS (PRO UI STYLE)
 function renderResults(data, append = false) {
     const container = document.getElementById("popularGroupsContainer");
 
@@ -412,6 +413,9 @@ function renderResults(data, append = false) {
         const div = document.createElement("div");
 
         div.className = "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden card-hover fade-in flex flex-col h-full";
+
+        // ✅ Create the URL safely outside the template string
+        const detailUrl = `group.html?id=${group.slug}&ts=${lastToken.ts}&sig=${lastToken.sig}`;
 
         div.innerHTML = `
             <div class="p-6 flex flex-col h-full">
@@ -441,9 +445,7 @@ function renderResults(data, append = false) {
                         </span>
                     </div>
 
-                    
-                    // NEW CODE
-                    <a href="group.html?id=${group.slug}&ts=${lastToken.ts}&sig=${lastToken.sig}" 
+                    <a href="${detailUrl}" 
                        class="join-btn text-white px-4 py-2 rounded-lg text-sm font-medium text-center">
                        View Details
                     </a>
