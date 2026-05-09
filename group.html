@@ -87,7 +87,7 @@
     </main>
 
     <script>
-        const API_BASE = "https://telegram-api.huntereye76.workers.dev/"; // 🚨 PASTE YOUR CLOUDFLARE WORKER URL HERE
+        const API_BASE = "https://telegram-api.huntereye76.workers.dev"; // 🚨 PASTE YOUR CLOUDFLARE WORKER URL HERE
         
         let hiddenLink = "";
         let isWaiting = false;
@@ -151,7 +151,7 @@
 
                 if (timeLeft < 0) {
                     clearInterval(timer);
-                    window.location.href = hiddenLink;
+                    window.open(hiddenLink, "_blank");
                 }
             }, 1000);
         }
