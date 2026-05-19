@@ -42,7 +42,6 @@
         .mobile-menu.open {
             max-height: 1000px;
         }
-        /* Custom scrollbars matching trading style UI density */
         #tg-widget-pane::-webkit-scrollbar {
             width: 6px;
         }
@@ -56,7 +55,6 @@
         .dark #tg-widget-pane::-webkit-scrollbar-thumb {
             background: #4b5563;
         }
-        /* Style post blocks cleanly */
         .tg-post-wrapper {
             margin-bottom: 14px;
             width: 100%;
@@ -83,20 +81,15 @@
                     </div>
                 </div>
                 <div class="flex items-center">
-
-                    <button id="darkModeToggle"
-                        class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <button id="darkModeToggle" class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                         <i class="fas fa-moon dark:hidden"></i>
                         <i class="fas fa-sun hidden dark:inline"></i>
                     </button>
-                
                     <div class="md:hidden ml-2">
-                        <button onclick="toggleMobileMenu()"
-                            class="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <button onclick="toggleMobileMenu()" class="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                             <i class="fas fa-bars"></i>
                         </button>
                     </div>
-                
                 </div>
             </div>
         </div>
@@ -120,7 +113,6 @@
     </div>
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
-        
         <div id="layout-wrapper" class="grid grid-cols-1 gap-8 max-w-xl mx-auto w-full transition-all duration-500">
             
             <div id="group-container" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 md:p-8 flex flex-col justify-center min-h-[380px]">
@@ -172,13 +164,12 @@
                     
                     <p class="text-center text-[10px] text-gray-400 uppercase tracking-wider mt-2">Secure access path managed via system endpoints.</p>
                 </div>
-
             </div>
 
             <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[650px] lg:h-[700px] min-h-[600px]">
                 <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span class="text-sm font-semibold flex items-center gap-2">
-                        <i class="fas fa-bolt text-yellow-500"></i> Live Infinite Timeline
+                        <i class="fas fa-bolt text-yellow-500"></i> Live Channel Stream (Newest First)
                     </span>
                     <button onclick="toggleChannelPreview()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">
                         <i class="fas fa-times"></i>
@@ -188,13 +179,12 @@
                 <div id="tg-widget-pane" class="w-full flex-grow p-4 overflow-y-auto bg-gray-50 dark:bg-[#17212b]">
                     <div id="posts-mount-target" class="w-full max-w-md mx-auto flex flex-col items-center"></div>
                     <div id="pane-scroll-loader" class="text-center py-4 text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wide">
-                        Scroll down to load historical posts...
+                        Scroll down to load historical messages...
                     </div>
                 </div>
             </div>
 
         </div>
-
     </main>
 
     <footer class="bg-blue-100 dark:bg-blue-950 border-t border-blue-200 dark:border-blue-800 mt-auto">
@@ -244,8 +234,9 @@
         let isPreviewOpen = false;
         let channelUsername = ""; 
 
-        // Infinite scroll layout tracking properties
-        let currentPostId = 425; 
+        // Set high initial post tracking index pointers to grab newest content blocks first
+        let newestPostId = 425; 
+        let oldestPostId = 425; 
         let isBatchLoading = false;
 
         const themeToggle = document.getElementById('darkModeToggle');
@@ -296,12 +287,17 @@
                 
                 document.getElementById('g-title').innerText = data.title;
                 document.getElementById('g-desc').innerText = data.description || "No description provided.";
-                document.getElementById('g-members').innerText = `${formatMemberCount(data.members)} ${data.type === 'channel' ? 'Subscribers' : 'Members'}`;
+                
+                let memberLabel = "Members";
+                if (data.type === 'channel') memberLabel = "Subscribers";
+                if (data.type === 'bot') memberLabel = "Bot Service";
+                
+                document.getElementById('g-members').innerText = data.type === 'bot' ? memberLabel : `${formatMemberCount(data.members)} ${memberLabel}`;
                 
                 hiddenLink = data.link;
 
-                // Strip down explicit path structures safely targeting raw channel identities
-                if (hiddenLink) {
+                // ⚡ CORE FIX: Validate handle and ensure preview button ONLY shows if the item type is a channel
+                if (hiddenLink && data.type === 'channel') {
                     const cleanLink = hiddenLink.replace(/\/$/, "").trim(); 
                     const parts = cleanLink.split('/');
                     const potentialHandle = parts[parts.length - 1];
@@ -310,6 +306,9 @@
                         channelUsername = potentialHandle;
                         document.getElementById('preview-btn').classList.remove('hidden');
                     }
+                } else {
+                    // Force hide option if it's a group or bot asset instance
+                    document.getElementById('preview-btn').classList.add('hidden');
                 }
 
                 document.getElementById('loader').classList.add('hidden');
@@ -375,16 +374,15 @@
             }
         }
 
-        // Resets counters and triggers core infinite load setup loops
         function resetAndReloadTimeline() {
             document.getElementById('posts-mount-target').innerHTML = "";
-            currentPostId = 425; // Base track pointer index
+            newestPostId = 425; 
+            oldestPostId = 425; 
             isBatchLoading = false;
             loadNextPostBatch();
         }
 
-        // Dynamically creates elements targeting your specific backward runtime stream method
-        function buildSinglePostEmbed(channelName, postId) {
+        function buildSinglePostEmbed(channelName, postId, appendToBottom = true) {
             const mountPoint = document.getElementById('posts-mount-target');
             const isDarkTheme = document.documentElement.classList.contains('dark');
 
@@ -401,42 +399,44 @@
             }
 
             postWrapper.appendChild(blockquote);
-            mountPoint.appendChild(postWrapper);
 
-            // Append execution runtime script block scoped directly within this element context
+            if (appendToBottom) {
+                mountPoint.appendChild(postWrapper);
+            } else {
+                mountPoint.insertBefore(postWrapper, mountPoint.firstChild);
+            }
+
             const scriptTag = document.createElement("script");
             scriptTag.src = "https://telegram.org/js/telegram-widget.js?22";
             scriptTag.async = true;
             postWrapper.appendChild(scriptTag);
         }
 
-        // Infinite loop runner loading segments chronologically down
+        // ⚡ NEWEST FIRST IMPLEMENTATION: Appends decrementally backwards tracking down the layout stream
         function loadNextPostBatch() {
             if (isBatchLoading) return;
             isBatchLoading = true;
 
             const batchSize = 5;
             for (let i = 0; i < batchSize; i++) {
-                if (currentPostId <= 1) {
-                    document.getElementById('pane-scroll-loader').innerText = "Reached beginning of channel history.";
+                if (oldestPostId <= 1) {
+                    document.getElementById('pane-scroll-loader').innerText = "Reached beginning of channel feed history.";
                     break;
                 }
-                buildSinglePostEmbed(channelUsername, currentPostId);
-                currentPostId--;
+                // Appends older posts downwards to make sure the newest stays at the top when initialized
+                buildSinglePostEmbed(channelUsername, oldestPostId, true);
+                oldestPostId--;
             }
 
-            // Set dynamic delay flag to allow script rendering execution
             setTimeout(() => {
                 isBatchLoading = false;
             }, 1200);
         }
 
-        // Binds scroll tracking straight to the container block element frame viewport
         const widgetScrollPane = document.getElementById('tg-widget-pane');
         widgetScrollPane.addEventListener('scroll', () => {
             if (!isPreviewOpen) return;
             
-            // Check container scroll height positions to identify bottom proximity triggers
             if (widgetScrollPane.scrollTop + widgetScrollPane.clientHeight >= widgetScrollPane.scrollHeight - 400) {
                 loadNextPostBatch();
             }
