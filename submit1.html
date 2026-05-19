@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Group - TeleSearch</title>
+    <script src="https://cdn.tailwindcss.com?plugins=line-clamp"></script>
+    <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+    </script>
+    
+    <script>
+    if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
+    } else {
+        document.documentElement.classList.remove("dark");
+    }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .submit-card {
+            transition: all 0.2s ease;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #0088cc, #00a2e8);
+            transition: all 0.2s ease;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.3);
+        }
+        .dark .submit-btn:hover {
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.5);
+        }
+        .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.2);
+        }
+        .dark .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.4);
+        }
+        .mobile-menu {
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .mobile-menu.open {
+            max-height: 1000px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+    <nav class="sticky top-0 z-50 bg-blue-100/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-blue-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center">
+                        <i class="fab fa-telegram text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-xl font-bold">TeleSearch</span>
+                    </a>
+                    <div class="hidden md:flex ml-10 space-x-8">
+                        <a href="index.html" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">Home</a>
+                        <a href="categories.html" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">Categories</a>
+                        <a href="top.html" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">Top Groups</a>
+                        <a href="about.html" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">About</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+
+                    <button id="darkModeToggle"
+                        class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                
+                    <div class="md:hidden ml-2">
+                        <button onclick="toggleMobileMenu()"
+                            class="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                
+                </div>
+            </div>
+        </div>
+        <div id="mobileMenu" class="mobile-menu md:hidden bg-white dark:bg-gray-800">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Home</a>
+                <a href="categories.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Categories</a>
+                <a href="top.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Top Groups</a>
+                <a href="about.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-2xl w-full mx-auto px-4 py-16">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4">Submit Your Telegram</h1>
+            <p class="text-gray-600 dark:text-gray-400">Add your community to the largest directory of Telegram listings.</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 submit-card">
+            <form id="submitForm" class="space-y-6">
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                    <select id="type" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:border-blue-500 form-input transition">
+                        <option value="group">Group</option>
+                        <option value="channel">Channel</option>
+                        <option value="bot">Bot</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                    <input type="text" id="title" placeholder="Enter name"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:border-blue-500 form-input transition">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Telegram Link</label>
+                    <input type="text" id="link" placeholder="https://t.me/yourlink"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:border-blue-500 form-input transition">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                    <select id="category" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:border-blue-500 form-input transition">
+                        <option>Crypto</option>
+                        <option>Trading</option>
+                        <option>Programming</option>
+                        <option>Movies</option>
+                        <option>Gaming</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                    <textarea id="description" rows="4"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:border-blue-500 form-input transition"
+                        placeholder="Describe your group..."></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full submit-btn text-white py-3 px-6 rounded-lg font-medium text-center shadow-sm">
+                    Submit Listing
+                </button>
+
+            </form>
+
+            <p id="msg" class="text-center mt-4 text-sm font-medium"></p>
+        </div>
+    </main>
+
+    <footer class="bg-blue-100 dark:bg-blue-950 border-t border-blue-200 dark:border-blue-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">TeleSearch</h3>
+                    <p class="text-gray-600 dark:text-gray-400">The largest directory of Telegram groups and channels.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Home</a></li>
+                        <li><a href="categories.html" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Categories</a></li>
+                        <li><a href="top.html" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Top Groups</a></li>
+                        <li><a href="about.html" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">About</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">DMCA</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Connect</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"><i class="fab fa-telegram text-xl"></i></a>
+                        <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"><i class="fab fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"><i class="fab fa-github text-xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
+                <p>© 2023 TeleSearch. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>    
+
+    <script>
+    // 🌙 Dark Mode State Alignment
+    const themeToggle = document.getElementById('darkModeToggle');
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    });
+
+    // 📱 Mobile Menu Functionality
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        menu.classList.toggle('open');
+    }
+
+    document.querySelectorAll("#mobileMenu a").forEach(link => {
+        link.addEventListener("click", () => {
+            document.getElementById("mobileMenu").classList.remove("open");
+        });
+    });
+
+    // 🚀 Form Submit Action Handling
+    document.getElementById("submitForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const msgEl = document.getElementById("msg");
+
+        const data = {
+            type: document.getElementById("type").value,
+            title: document.getElementById("title").value,
+            link: document.getElementById("link").value,
+            category: document.getElementById("category").value,
+            description: document.getElementById("description").value
+        };
+
+        // Validation Rules matching form input structure
+        if (!data.title || !data.link) {
+            msgEl.className = "text-center mt-4 text-sm font-medium text-red-500";
+            msgEl.innerText = "Please fill all required fields";
+            return;
+        }
+
+        console.log("Submitted:", data);
+
+        // Success messaging presentation tracking
+        msgEl.className = "text-center mt-4 text-sm font-medium text-green-500";
+        msgEl.innerText = "Submitted successfully (demo)";
+
+        this.reset();
+    });
+    </script>
+</body>
+</html>
