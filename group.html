@@ -42,12 +42,6 @@
         .mobile-menu.open {
             max-height: 1000px;
         }
-        /* Style adjustments for custom telegram script rendering container */
-        .tgme_channel_widget_string {
-            display: block !important;
-            margin: 0 auto !important;
-            width: 100% !important;
-        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200 min-h-screen flex flex-col">
@@ -160,16 +154,16 @@
 
             </div>
 
-            <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[550px] lg:h-[550px] min-h-[500px]">
+            <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[600px] lg:h-[650px] min-h-[550px]">
                 <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span class="text-sm font-semibold flex items-center gap-2">
-                        <i class="fas fa-bolt text-yellow-500"></i> Live Channel Feed
+                        <i class="fas fa-bolt text-yellow-500"></i> Live Channel History
                     </span>
                     <button onclick="toggleChannelPreview()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div id="tg-widget-pane" class="w-full flex-grow bg-white dark:bg-[#17212b] p-2 overflow-y-auto flex justify-center items-start">
+                <div id="tg-widget-pane" class="w-full flex-grow bg-white dark:bg-[#17212b] overflow-hidden relative">
                     </div>
             </div>
 
@@ -276,8 +270,8 @@
                 
                 hiddenLink = data.link;
 
-                // Extract handling sequence matching your accurate join target link
-                if (data.type === 'channel' && hiddenLink) {
+                // Extract username handles for embed support verification
+                if (hiddenLink) {
                     const cleanLink = hiddenLink.replace(/\/$/, "").trim(); 
                     const parts = cleanLink.split('/');
                     const potentialHandle = parts[parts.length - 1];
@@ -351,27 +345,27 @@
             }
         }
 
-        // ⚡ Bypasses X-Frame-Options dynamically by mounting Telegram's official runtime script execution tag
+        // ⚡ Loads direct historical view matching the scrollable channel preview feature
         function renderTelegramEmbed() {
             const pane = document.getElementById('tg-widget-pane');
             const isDarkTheme = document.documentElement.classList.contains('dark');
             
-            // Clear prior container contexts cleanly
-            pane.innerHTML = "";
-
-            // Create explicit HTML5 script wrapper element matching Telegram developer spec
-            const scriptTag = document.createElement('script');
-            scriptTag.src = "https://telegram.org/js/telegram-widget.js?22";
-            
-            // Configure telemetry context attributes targeting calculated channel target data rules
-            scriptTag.setAttribute("data-telegram-discussion", channelUsername);
-            scriptTag.setAttribute("data-comments-limit", "5");
+            // Generate clean target secure embed link pointing directly to live feed timelines
+            let embedUrl = `https://t.me/s/${channelUsername}`;
             if (isDarkTheme) {
-                scriptTag.setAttribute("data-dark", "1");
+                embedUrl += "?dark=1";
             }
-            
-            // Re-render context safely inside viewport container
-            pane.appendChild(scriptTag);
+
+            // Render via a targeted iframe using specific container heights to enable scroll behaviors
+            pane.innerHTML = `
+                <iframe 
+                    src="${embedUrl}" 
+                    class="w-full h-full border-0 absolute inset-0"
+                    style="color-scheme: ${isDarkTheme ? 'dark' : 'light'};"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                    loading="lazy">
+                </iframe>
+            `;
         }
 
         function formatMemberCount(count) {
