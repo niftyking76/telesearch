@@ -42,10 +42,11 @@
         .mobile-menu.open {
             max-height: 1000px;
         }
-        .tg-iframe-container iframe {
+        /* Style adjustments for custom telegram script rendering container */
+        .tgme_channel_widget_string {
+            display: block !important;
+            margin: 0 auto !important;
             width: 100% !important;
-            height: 100% !important;
-            border: none !important;
         }
     </style>
 </head>
@@ -159,7 +160,7 @@
 
             </div>
 
-            <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[550px] lg:h-full min-h-[450px]">
+            <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[550px] lg:h-[550px] min-h-[500px]">
                 <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span class="text-sm font-semibold flex items-center gap-2">
                         <i class="fas fa-bolt text-yellow-500"></i> Live Channel Feed
@@ -168,7 +169,7 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div id="tg-widget-pane" class="w-full flex-grow bg-white dark:bg-[#17212b] tg-iframe-container relative">
+                <div id="tg-widget-pane" class="w-full flex-grow bg-white dark:bg-[#17212b] p-2 overflow-y-auto flex justify-center items-start">
                     </div>
             </div>
 
@@ -273,10 +274,9 @@
                 document.getElementById('g-desc').innerText = data.description || "No description provided.";
                 document.getElementById('g-members').innerText = `${formatMemberCount(data.members)} ${data.type === 'channel' ? 'Subscribers' : 'Members'}`;
                 
-                // 🔐 Set verified API target link exactly like the join sequence does
                 hiddenLink = data.link;
 
-                // 🌟 FIX: Safe verification extractor directly reading from authorized string path
+                // Extract handling sequence matching your accurate join target link
                 if (data.type === 'channel' && hiddenLink) {
                     const cleanLink = hiddenLink.replace(/\/$/, "").trim(); 
                     const parts = cleanLink.split('/');
@@ -351,21 +351,27 @@
             }
         }
 
+        // ⚡ Bypasses X-Frame-Options dynamically by mounting Telegram's official runtime script execution tag
         function renderTelegramEmbed() {
             const pane = document.getElementById('tg-widget-pane');
             const isDarkTheme = document.documentElement.classList.contains('dark');
             
+            // Clear prior container contexts cleanly
             pane.innerHTML = "";
 
-            const iframe = document.createElement('iframe');
-            let widgetUrl = `https://t.me/s/${channelUsername}?embed=1`;
+            // Create explicit HTML5 script wrapper element matching Telegram developer spec
+            const scriptTag = document.createElement('script');
+            scriptTag.src = "https://telegram.org/js/telegram-widget.js?22";
+            
+            // Configure telemetry context attributes targeting calculated channel target data rules
+            scriptTag.setAttribute("data-telegram-discussion", channelUsername);
+            scriptTag.setAttribute("data-comments-limit", "5");
             if (isDarkTheme) {
-                widgetUrl += '&dark=1';
+                scriptTag.setAttribute("data-dark", "1");
             }
             
-            iframe.src = widgetUrl;
-            iframe.className = "w-full h-full border-0 absolute inset-0";
-            pane.appendChild(iframe);
+            // Re-render context safely inside viewport container
+            pane.appendChild(scriptTag);
         }
 
         function formatMemberCount(count) {
