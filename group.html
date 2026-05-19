@@ -42,7 +42,6 @@
         .mobile-menu.open {
             max-height: 1000px;
         }
-        /* Custom iframe scrollbar masking for Telegram Widget integrations */
         .tg-iframe-container iframe {
             width: 100% !important;
             height: 100% !important;
@@ -104,7 +103,7 @@
         </div>
     </div>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col justify-center">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
         
         <div id="layout-wrapper" class="grid grid-cols-1 gap-8 max-w-xl mx-auto w-full transition-all duration-500">
             
@@ -144,7 +143,7 @@
                     <div class="space-y-3 mt-auto">
                         <button id="join-btn" onclick="handleJoin()" 
                             class="w-full join-btn text-white font-medium py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-3 shadow-sm">
-                            <span id="btn-text font-semibold">Join via Telegram</span>
+                            <span id="btn-text" class="font-semibold">Join via Telegram</span>
                             <i id="btn-icon" class="fas fa-external-link-alt text-sm"></i>
                         </button>
 
@@ -160,7 +159,7 @@
 
             </div>
 
-            <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[550px] md:h-full min-h-[450px]">
+            <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[550px] lg:h-full min-h-[450px]">
                 <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span class="text-sm font-semibold flex items-center gap-2">
                         <i class="fas fa-bolt text-yellow-500"></i> Live Channel Feed
@@ -222,21 +221,18 @@
         let hiddenLink = "";
         let isWaiting = false;
         let isPreviewOpen = false;
-        let channelUsername = ""; // Stores extracted handle configuration for previews
+        let channelUsername = ""; 
 
-        // 🌙 Dark Mode Interface Logic Alignment
         const themeToggle = document.getElementById('darkModeToggle');
         themeToggle.addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem("theme", isDark ? "dark" : "light");
             
-            // Re-render widget structure upon context change to mirror systemic lighting metrics inside the iFrame
             if(isPreviewOpen && channelUsername) {
                 renderTelegramEmbed();
             }
         });
 
-        // 📱 Mobile responsive configuration menu controllers
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
             menu.classList.toggle('open');
@@ -248,7 +244,6 @@
             const ts = params.get("ts");
             const sig = params.get("sig");
 
-            // Attempt reconstruction of search parameters to fix the index back link tracking context
             if (ts && sig) {
                 const backButton = document.getElementById('backButton');
                 if (backButton) backButton.href = `index.html?ts=${ts}&sig=${sig}`;
@@ -274,27 +269,25 @@
 
                 const data = await response.json();
                 
-                // Populating descriptive metrics
                 document.getElementById('g-title').innerText = data.title;
                 document.getElementById('g-desc').innerText = data.description || "No description provided.";
                 document.getElementById('g-members').innerText = `${formatMemberCount(data.members)} ${data.type === 'channel' ? 'Subscribers' : 'Members'}`;
+                
+                // 🔐 Set verified API target link exactly like the join sequence does
                 hiddenLink = data.link;
 
-                // 🌟 CHANNEL EXTRACTOR FOR WIDGET PREVIEW:
-                // Evaluates if structural path configuration matches standard channel access formatting rules
+                // 🌟 FIX: Safe verification extractor directly reading from authorized string path
                 if (data.type === 'channel' && hiddenLink) {
-                    const cleanLink = hiddenLink.replace(/\/$/, ""); // Strip trailing slashes
+                    const cleanLink = hiddenLink.replace(/\/$/, "").trim(); 
                     const parts = cleanLink.split('/');
                     const potentialHandle = parts[parts.length - 1];
                     
-                    // Filter out custom joinlinks containing '+', leaving clean username identifiers valid
                     if(potentialHandle && !potentialHandle.includes('+') && !potentialHandle.includes('joinchat')) {
                         channelUsername = potentialHandle;
                         document.getElementById('preview-btn').classList.remove('hidden');
                     }
                 }
 
-                // Smooth display state updates
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('content-box').classList.remove('hidden');
 
@@ -303,13 +296,12 @@
             }
         }
 
-        // Action routing handling redirect sequences
         function handleJoin() {
             if (isWaiting) return;
             isWaiting = true;
 
             const btn = document.getElementById('join-btn');
-            const btnText = btn.querySelector('span') || btn;
+            const btnText = document.getElementById('btn-text');
             const icon = document.getElementById('btn-icon');
             
             let timeLeft = 3;
@@ -325,7 +317,6 @@
                     clearInterval(timer);
                     window.open(hiddenLink, "_blank");
                     
-                    // Restore original formatting controls seamlessly
                     btn.classList.add('join-btn');
                     btn.classList.remove('bg-gray-500', 'cursor-not-allowed');
                     btnText.innerText = "Join via Telegram";
@@ -335,7 +326,6 @@
             }, 1000);
         }
 
-        // 🌟 LIVE WINDOW TOGGLE HANDLING
         function toggleChannelPreview() {
             if (!channelUsername) return;
 
@@ -344,38 +334,30 @@
             const previewBtnText = document.getElementById('preview-btn-text');
 
             if (!isPreviewOpen) {
-                // Expanding to display workspace view structures
                 wrapper.classList.remove('max-w-xl');
                 wrapper.classList.add('max-w-7xl', 'lg:grid-cols-2');
                 previewPane.classList.remove('hidden');
                 previewBtnText.innerText = "Close Live Preview";
                 isPreviewOpen = true;
                 
-                // Injecting widget components
                 renderTelegramEmbed();
             } else {
-                // Return to clean minimal presentation models
                 wrapper.classList.remove('max-w-7xl', 'lg:grid-cols-2');
                 wrapper.classList.add('max-w-xl');
                 previewPane.classList.add('hidden');
                 previewBtnText.innerText = "Preview Channel Feed";
-                document.getElementById('tg-widget-pane').innerHTML = ""; // Clean memory tracking nodes
+                document.getElementById('tg-widget-pane').innerHTML = ""; 
                 isPreviewOpen = false;
             }
         }
 
-        // Compiles and outputs native frame contexts linked to standard Telegram Widget endpoints
         function renderTelegramEmbed() {
             const pane = document.getElementById('tg-widget-pane');
             const isDarkTheme = document.documentElement.classList.contains('dark');
             
-            // Clear content blocks inside output spaces
             pane.innerHTML = "";
 
-            // Create target frame contexts targeting official t.me dynamic preview formats
             const iframe = document.createElement('iframe');
-            
-            // Build the embedded widget tracking configurations parameter path
             let widgetUrl = `https://t.me/s/${channelUsername}?embed=1`;
             if (isDarkTheme) {
                 widgetUrl += '&dark=1';
@@ -386,7 +368,6 @@
             pane.appendChild(iframe);
         }
 
-        // Utility formatting functions 
         function formatMemberCount(count) {
             if (!count) return "0";
             const num = parseInt(count);
@@ -402,7 +383,6 @@
             document.getElementById('error-msg').innerText = msg;
         }
 
-        // Trigger loading routines
         loadGroupDetails();
     </script>
 </body>
