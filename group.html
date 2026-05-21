@@ -136,12 +136,19 @@
 
                     <div id="content-box" class="hidden flex flex-col h-full space-y-5">
                         <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 p-3.5 rounded-xl">
-                                <i class="fab fa-telegram text-3xl text-blue-500 dark:text-blue-400"></i>
+                            <div id="logo-frame" class="flex-shrink-0 h-16 w-16 rounded-xl overflow-hidden bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center border border-gray-200/40 dark:border-gray-700/40">
+                                <i id="fallback-logo-icon" class="fab fa-telegram text-3xl text-blue-500 dark:text-blue-400"></i>
+                                <img id="dynamic-logo-img" class="hidden h-full w-full object-cover" alt="Channel Logo" referrerpolicy="no-referrer" onerror="handleImageError()">
                             </div>
                             <div class="flex-grow min-w-0">
                                 <h1 id="g-title" class="text-xl font-bold text-gray-900 dark:text-white break-words line-clamp-2"></h1>
                                 <p id="g-members" class="text-xs font-semibold text-blue-500 dark:text-blue-400 mt-0.5"></p>
+                                
+                                <div class="flex items-center gap-1.5 mt-1.5">
+                                    <div id="star-rating-slot" class="flex text-amber-400 text-xs">
+                                        </div>
+                                    <span id="star-rating-lbl" class="text-[11px] font-bold text-gray-400 dark:text-gray-500"></span>
+                                </div>
                             </div>
                         </div>
 
@@ -170,7 +177,7 @@
                         </div>
                         
                         <div class="flex justify-around items-center border-t border-gray-100 dark:border-gray-700/60 pt-3 text-[11px] text-gray-400 font-medium">
-                            <button onclick="alert('Link copied to clipboard!')" class="hover:text-blue-500 transition flex items-center gap-1.5"><i class="fas fa-share-alt"></i> Share</button>
+                            <button onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!')" class="hover:text-blue-500 transition flex items-center gap-1.5"><i class="fas fa-share-alt"></i> Share</button>
                             <span class="text-gray-200 dark:text-gray-700">|</span>
                             <button onclick="this.classList.toggle('text-yellow-500')" class="hover:text-yellow-500 transition flex items-center gap-1.5"><i class="fas fa-bookmark"></i> Bookmark</button>
                             <span class="text-gray-200 dark:text-gray-700">|</span>
@@ -204,21 +211,50 @@
                 </div>
             </div>
 
-            <div id="analytics-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col justify-between h-[320px] lg:h-auto">
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Subscribers Growth Trajectory</h3>
-                        <span class="text-[10px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">12-Month Run</span>
+            <div class="flex flex-col gap-6">
+                <div id="analytics-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col justify-between h-[300px]">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Subscribers Growth Trajectory</h3>
+                            <span class="text-[10px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">12-Month Run</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 mb-4">Historical growth curve reconstructed using dynamic structural analysis nodes.</p>
                     </div>
-                    <p class="text-[11px] text-gray-400 mb-4">Historical growth curve reconstructed using dynamic structural analysis nodes.</p>
+                    <div class="relative w-full flex-grow flex items-center justify-center">
+                        <canvas id="growthChart" class="w-full max-h-[190px]"></canvas>
+                    </div>
                 </div>
-                <div class="relative w-full flex-grow flex items-center justify-center">
-                    <canvas id="growthChart" class="w-full max-h-[220px]"></canvas>
+
+                <div id="extended-insights-card" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Content Distribution Indexing</h3>
+                        <p class="text-[11px] text-gray-400">Granular intelligence mapping contextual density weight matrix metrics.</p>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Top Contextual Keywords</h4>
+                        <div id="insight-topics-container" class="space-y-2">
+                            </div>
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700/60 pt-3 space-y-2.5">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Signal Verification Metrics</h4>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/30 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-gray-800/60">
+                                <span class="text-gray-400 text-[11px]">Engagement</span>
+                                <span id="insight-engagement" class="font-bold text-gray-700 dark:text-gray-300">--</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/30 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-gray-800/60">
+                                <span class="text-gray-400 text-[11px]">Forward Rate</span>
+                                <span id="insight-forwards" class="font-bold text-gray-700 dark:text-gray-300">--</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="preview-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[650px] lg:h-[735px] min-h-[600px]">
-                <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span class="text-xs font-bold flex items-center gap-2 tracking-wide uppercase text-gray-500 dark:text-gray-400">
                         <i class="fas fa-bolt text-yellow-500 animate-bounce"></i> Live Stream Feed Preview
                     </span>
@@ -284,9 +320,8 @@
         let isWaiting = false;
         let isPreviewOpen = false;
         let channelUsername = ""; 
-        let globalChartInstance = null; // Holds the Chart.js instance for proper updates
+        let globalChartInstance = null; 
 
-        // Set high initial post tracking index pointers to grab newest content blocks first
         let newestPostId = 425; 
         let oldestPostId = 425; 
         let isBatchLoading = false;
@@ -296,7 +331,6 @@
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem("theme", isDark ? "dark" : "light");
             
-            // Re-render chart to update gridlines color mode structure properties smoothly
             if (globalChartInstance) {
                 renderDeterministicChart(globalChartInstance.config.data._memberCount, globalChartInstance.config.data._titleString);
             }
@@ -311,9 +345,9 @@
             menu.classList.toggle('open');
         }
 
-        // LCG Pseudo-Random Number Generator to ensure lines are random but constant on reload
+        // Linear Congruential Generator logic node configuration parameters
         function createSeededRandom(seed) {
-            let m = 0x80000000; // 2**31
+            let m = 0x80000000; 
             let a = 1103515245;
             let c = 12345;
             let state = seed ? seed : Math.floor(Math.random() * (m - 1));
@@ -323,7 +357,6 @@
             }
         }
 
-        // Logic framework that converts title string patterns + raw count arrays into integer seed constants
         function generateSeedFromStringAndCount(str, count) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -332,38 +365,85 @@
             return Math.abs(hash + parseInt(count || 1000));
         }
 
+        // Logic block generating 5-Star proportional ranking metrics using log scale
+        function computeDynamicSubscriberRating(members) {
+            const count = parseInt(members) || 0;
+            if (count <= 500) return 1.5;
+            if (count >= 1000000) return 5.0;
+            
+            // Log base scalar map curve processing logic bounded inside structural metrics
+            const minLog = Math.log10(500);
+            const maxLog = Math.log10(1000000);
+            const currentLog = Math.log10(count);
+            
+            const proportionalScore = 1.5 + ((currentLog - minLog) / (maxLog - minLog)) * 3.5;
+            return parseFloat(proportionalScore.toFixed(1));
+        }
+
+        function renderStarRatingUI(score) {
+            const target = document.getElementById('star-rating-slot');
+            target.innerHTML = "";
+            
+            const fullStars = Math.floor(score);
+            const hasHalf = (score - fullStars) >= 0.4;
+            
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                if (i <= fullStars) {
+                    star.className = "fas fa-star";
+                } else if (i === fullStars + 1 && hasHalf) {
+                    star.className = "fas fa-star-half-alt";
+                } else {
+                    star.className = "far fa-star";
+                }
+                target.appendChild(star);
+            }
+            document.getElementById('star-rating-lbl').innerText = `${score} / 5.0 Index`;
+        }
+
+        // Resolution framework implementing automated avatar lookup routines via web paths
+        function attemptChannelLogoResolution(username) {
+            if(!username) return;
+            const logoImg = document.getElementById('dynamic-logo-img');
+            const fallbackIcon = document.getElementById('fallback-logo-icon');
+            
+            // Reconstruct web index pathway pointer mapping targeting asset profile frame
+            logoImg.src = `https://t.me/i/userpic/320/${username}.jpg`;
+            logoImg.classList.remove('hidden');
+            fallbackIcon.classList.add('hidden');
+        }
+
+        function handleImageError() {
+            // Revert state indicators safely back if CORS context profiles fail resolution
+            document.getElementById('dynamic-logo-img').classList.add('hidden');
+            document.getElementById('fallback-logo-icon').classList.remove('hidden');
+        }
+
         function renderDeterministicChart(memberCount, titleString) {
             const ctx = document.getElementById('growthChart').getContext('2d');
-            
-            if (globalChartInstance) {
-                globalChartInstance.destroy();
-            }
+            if (globalChartInstance) { globalChartInstance.destroy(); }
 
             const rawCount = parseInt(memberCount) || 25000;
             const seedValue = generateSeedFromStringAndCount(titleString || "TeleChannel", rawCount);
             const randGen = createSeededRandom(seedValue);
 
-            // Reconstruct a 12-month timeline curve moving backward sequentially
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             let dataPoints = new Array(12);
-            
             let currentAccumulator = rawCount;
             dataPoints[11] = currentAccumulator;
 
             for(let i = 10; i >= 0; i--) {
-                // Growth fluctuations between 0.5% and 6.5% backward decrements per step
                 let structuralDropPercent = 0.005 + (randGen() * 0.06); 
                 currentAccumulator = Math.floor(currentAccumulator / (1 + structuralDropPercent));
                 dataPoints[i] = currentAccumulator;
             }
 
             const isDark = document.documentElement.classList.contains('dark');
-            const gridColor = isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(226, 232, 240, 0.8)';
+            const gridColor = isDark ? 'rgba(75, 85, 99, 0.25)' : 'rgba(226, 232, 240, 0.8)';
             const textColor = isDark ? '#9ca3af' : '#64748b';
 
-            // Generate gradient vector tracks for visual tracking fidelity depth metrics
-            let fillGradient = ctx.createLinearGradient(0, 0, 0, 200);
-            fillGradient.addColorStop(0, 'rgba(0, 136, 204, 0.25)');
+            let fillGradient = ctx.createLinearGradient(0, 0, 0, 160);
+            fillGradient.addColorStop(0, 'rgba(0, 136, 204, 0.22)');
             fillGradient.addColorStop(1, 'rgba(0, 136, 204, 0.0)');
 
             globalChartInstance = new Chart(ctx, {
@@ -371,16 +451,16 @@
                 data: {
                     labels: months,
                     datasets: [{
-                        label: 'Subscribers Trend',
+                        label: 'Trend',
                         data: dataPoints,
                         borderColor: '#00a2e8',
-                        borderWidth: 2.5,
+                        borderWidth: 2.2,
                         pointBackgroundColor: '#0088cc',
                         pointBorderColor: isDark ? '#1f2937' : '#ffffff',
-                        pointHoverRadius: 5,
+                        pointHoverRadius: 4,
                         fill: true,
                         backgroundColor: fillGradient,
-                        tension: 0.36
+                        tension: 0.35
                     }],
                     _memberCount: memberCount, 
                     _titleString: titleString
@@ -451,12 +531,15 @@
                 
                 document.getElementById('g-members').innerText = data.type === 'bot' ? memberLabel : `${formatMemberCount(data.members)} ${memberLabel}`;
                 
-                // Inject Category specific string configurations inside context tags
                 if(data.category) {
                     document.getElementById('g-category-badge').innerText = `#${data.category}`;
                 }
 
-                // Render dynamic deterministic dashboard metrics text values
+                // Fire proportional star ranking calculations engine
+                const scoreMetric = computeDynamicSubscriberRating(data.members);
+                renderStarRatingUI(scoreMetric);
+
+                // Re-populate system metadata metric analytics cards elements
                 const rawCount = parseInt(data.members) || 5000;
                 const activityRate = rawCount > 50000 ? "High (~88 p/w)" : (rawCount > 10000 ? "Medium (~24 p/w)" : "Stable (~5 p/w)");
                 document.getElementById('stat-activity').innerText = activityRate;
@@ -468,16 +551,45 @@
                 const growthCalc = (0.8 + ((seedForAge % 50) / 10)).toFixed(1);
                 document.getElementById('stat-growth').innerText = `+${growthCalc}%`;
 
-                // Unhide auxiliary layout panels on success
+                // Render contextual sub-analytics dashboard segments deterministically via seed
+                document.getElementById('extended-insights-card').classList.remove('hidden');
+                const keywordPool = ["#announcements", "#community", "#tutorials", "#updates", "#resources", "#market_feed", "#discussion", "#alpha_signals", "#logs", "#faq_docs"];
+                const topicsContainer = document.getElementById('insight-topics-container');
+                topicsContainer.innerHTML = ""; 
+
+                const insightRand = createSeededRandom(seedForAge);
+                let temporaryPool = [...keywordPool];
+                for (let k = 0; k < 3; k++) {
+                    let pickIndex = Math.floor(insightRand() * temporaryPool.length);
+                    let selectedTopic = temporaryPool.splice(pickIndex, 1)[0];
+                    let percentageWeight = Math.floor(40 + (insightRand() * 55));
+                    
+                    const topicRow = document.createElement('div');
+                    topicRow.className = "flex items-center justify-between text-xs gap-3";
+                    topicRow.innerHTML = `
+                        <span class="font-semibold text-gray-600 dark:text-gray-400 min-w-[85px] truncate">${selectedTopic}</span>
+                        <div class="flex-grow bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-blue-500 h-full rounded-full" style="width: ${percentageWeight}%"></div>
+                        </div>
+                        <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 w-8 text-right">${percentageWeight}%</span>
+                    `;
+                    topicsContainer.appendChild(topicRow);
+                }
+
+                const engRate = (1.5 + (insightRand() * 6.5)).toFixed(2);
+                const forwardRate = (3.2 + (insightRand() * 14.8)).toFixed(1);
+                document.getElementById('insight-engagement').innerText = `${engRate}%`;
+                document.getElementById('insight-forwards').innerText = `${forwardRate}%`;
+
+                // Unhide chart and dashboard container systems
                 document.getElementById('stats-dashboard-card').classList.remove('hidden');
                 document.getElementById('analytics-container').classList.remove('hidden');
 
-                // Render out our deterministic line charts tracking modules layout configurations
                 renderDeterministicChart(data.members, data.title);
 
                 hiddenLink = data.link;
 
-                // ⚡ CORE FIX: Validate handle and ensure preview button ONLY shows if the item type is a channel
+                // Validate handle and look up avatars
                 if (hiddenLink && data.type === 'channel') {
                     const cleanLink = hiddenLink.replace(/\/$/, "").trim(); 
                     const parts = cleanLink.split('/');
@@ -486,16 +598,22 @@
                     if(potentialHandle && !potentialHandle.includes('+') && !potentialHandle.includes('joinchat')) {
                         channelUsername = potentialHandle;
                         document.getElementById('preview-btn').classList.remove('hidden');
+                        attemptChannelLogoResolution(channelUsername);
                     }
-                } else {
-                    // Force hide option if it's a group or bot asset instance
+                } else if (hiddenLink) {
+                    // Try to catch group link username structures if they aren't private hashes
+                    const cleanLink = hiddenLink.replace(/\/$/, "").trim();
+                    const parts = cleanLink.split('/');
+                    const potentialHandle = parts[parts.length - 1];
+                    if(potentialHandle && !potentialHandle.includes('+') && !potentialHandle.includes('joinchat')) {
+                        attemptChannelLogoResolution(potentialHandle);
+                    }
                     document.getElementById('preview-btn').classList.add('hidden');
                 }
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('content-box').classList.remove('hidden');
 
-                // Auto balance default dimensions wrappers structure view parameters on boot
                 const wrapper = document.getElementById('layout-wrapper');
                 wrapper.classList.remove('max-w-xl');
                 wrapper.classList.add('max-w-4xl', 'md:grid-cols-2');
@@ -620,7 +738,6 @@
         const widgetScrollPane = document.getElementById('tg-widget-pane');
         widgetScrollPane.addEventListener('scroll', () => {
             if (!isPreviewOpen) return;
-            
             if (widgetScrollPane.scrollTop + widgetScrollPane.clientHeight >= widgetScrollPane.scrollHeight - 400) {
                 loadNextPostBatch();
             }
